@@ -10,6 +10,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
 from prediction_methods.lstm_stock_pred import LSTMPredict
+from prediction_methods.xgboost_pred import XGBPredict
 
 # Run dash
 app = dash.Dash()
@@ -17,13 +18,13 @@ server = app.server
 
 
 # Load data
-df_nse = pd.read_csv("data/NSE-TATA.csv")
+df = pd.read_csv("data/NSE-TATA.csv")
 
-df_nse["Date"] = pd.to_datetime(df_nse.Date,format = "%Y-%m-%d")
-df_nse.index = df_nse['Date']
+df["Date"] = pd.to_datetime(df.Date,format = "%Y-%m-%d")
+df.index = df['Date']
 
-data = df_nse.sort_index(ascending = True, axis = 0)
-new_data = pd.DataFrame(index = range(0, len(df_nse)), columns = ['Date', 'Close'])
+data = df.sort_index(ascending = True, axis = 0)
+new_data = pd.DataFrame(index = range(0, len(df)), columns = ['Date', 'Close'])
 
 for i in range(0, len(data)):
     new_data["Date"][i] = data['Date'][i]
@@ -55,6 +56,7 @@ inputs = scaler.transform(inputs)
 X_test = []
 for i in range(60,inputs.shape[0]):
     X_test.append(inputs[i - 60:i, 0])
+
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
@@ -74,56 +76,53 @@ app.layout = html.Div([
               Input('prediction-method-dropdown', 'value'))
 def update_selected_pmethod(selected_method):
     if (selected_method == "XGBoost"):
-        return html.Div([
-            html.P('Selected prediction method: XGBoost'),
-        ])
+        [train, valid] = XGBPredict(new_data)
     elif (selected_method == "RNN"):
-        return html.Div([
-            html.P('Selected prediction method: RNN'),
-        ])
+        [train, valid] = LSTMPredict(x_train, y_train, X_test, new_data, scaler)
     else:
         [train, valid] = LSTMPredict(x_train, y_train, X_test, new_data, scaler)
-        return html.Div([
-            html.P('Selected prediction method: LSTM'),
-            html.Div([
-                html.H2("Actual closing price",style={"textAlign": "center"}),
-                dcc.Graph(
-                    id="Actual Data",
-                    figure={
-                        "data":[
-                            go.Scatter(
-                                x=train.index,
-                                y=valid["Close"],
-                                mode='markers'
-                            )
-                        ],
-                        "layout":go.Layout(
-                            title='scatter plot',
-                            xaxis={'title':'Date'},
-                            yaxis={'title':'Closing Rate'}
+
+    return html.Div([
+        html.P('Selected prediction method:' + selected_method),
+        html.Div([
+            html.H2("Actual closing price",style={"textAlign": "center"}),
+            dcc.Graph(
+                id="Actual Data",
+                figure={
+                    "data":[
+                        go.Scatter(
+                            x=train.index,
+                            y=valid["Close"],
+                            mode='markers'
                         )
-                    }
-                ),
-                html.H2("LSTM Predicted closing price",style={"textAlign": "center"}),
-                dcc.Graph(
-                    id="Predicted Data",
-                    figure={
-                        "data":[
-                            go.Scatter(
-                                x = valid.index,
-                                y = valid["Predictions"],
-                                mode='markers'
-                            )
-                        ],
-                        "layout":go.Layout(
-                            title = 'scatter plot',
-                            xaxis = {'title':'Date'},
-                            yaxis = {'title':'Closing Rate'}
+                    ],
+                    "layout":go.Layout(
+                        title='scatter plot',
+                        xaxis={'title':'Date'},
+                        yaxis={'title':'Closing Rate'}
+                    )
+                }
+            ),
+            html.H2("Predicted closing price",style={"textAlign": "center"}),
+            dcc.Graph(
+                id="Predicted Data",
+                figure={
+                    "data":[
+                        go.Scatter(
+                            x = valid.index,
+                            y = valid["Predictions"],
+                            mode='markers'
                         )
-                    }
-                )                
-            ])                
-        ])
+                    ],
+                    "layout":go.Layout(
+                        title = 'scatter plot',
+                        xaxis = {'title':'Date'},
+                        yaxis = {'title':'Closing Rate'}
+                    )
+                }
+            )                
+        ])                
+    ])
 
 # Main
 if __name__=='__main__':
