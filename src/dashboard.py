@@ -11,6 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from prediction_methods.lstm_stock_pred import LSTMPredict
 from prediction_methods.xgboost_pred import XGBPredict
+from prediction_methods.rnn_stock_pred import RNNPredict
 
 # Run dash
 app = dash.Dash()
@@ -78,7 +79,7 @@ def update_selected_pmethod(selected_method):
     if (selected_method == "XGBoost"):
         [train, valid] = XGBPredict(new_data)
     elif (selected_method == "RNN"):
-        [train, valid] = LSTMPredict(x_train, y_train, X_test, new_data, scaler)
+        [train, valid] = RNNPredict(x_train, y_train, X_test, new_data, scaler)
     else:
         [train, valid] = LSTMPredict(x_train, y_train, X_test, new_data, scaler)
 
