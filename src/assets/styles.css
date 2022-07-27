@@ -1,0 +1,16 @@
+#prediction-method-dropdown, #prediction-type-dropdown {
+    margin-top: 0.4rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    width: 10rem;
+}
+
+#prediction-method-text, #prediction-type-text {
+    margin-left: 12rem;
+}
+
+#user-input {
+    display: flex;
+    flex-direction: row;
+    margin-left: 3.3rem;
+}
