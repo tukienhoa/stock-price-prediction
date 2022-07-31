@@ -98,8 +98,7 @@ def update_selected_pmethod(selected_method, selected_type):
         # [train, valid] = XGBPredict(x_train_XGB, y_train_XGB, X_test_XGB, new_data, scaler)
         pass
     elif (selected_method == "RNN"):
-        # [train, valid] = RNNPredict(x_train, y_train, X_test, new_data, scaler)
-        pass
+        [train, valid] = RNNPredict(df, selected_type)
     else:
         [train, valid] = LSTMPredict(df, selected_type)
     
