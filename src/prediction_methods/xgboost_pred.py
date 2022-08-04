@@ -22,6 +22,23 @@ def XGBPredict(df, type):
                 new_data[type][i] = 0
             else:
                 new_data[type][i] = (data["Close"][i] - data["Close"][i - 1]) / data["Close"][i - 1] * 100
+    elif (type == "RSI"):
+        periods = 14
+        close_delta = df['Close'].diff()
+
+        up = close_delta.clip(lower = 0)
+        down = -1 * close_delta.clip(upper = 0)
+
+        ma_up = up.rolling(periods).mean()
+        ma_down = down.rolling(periods).mean()
+
+        rs = ma_up / ma_down
+        rsi = 100 - (100 / (1 + rs))
+        rsi = rsi.fillna(0)
+
+        for i in range(0, len(data)):
+            new_data["Date"][i] = data['Date'][i]
+            new_data[type][i] = rsi[i]
         
     new_data.index = new_data.Date
     new_data.drop("Date", axis = 1, inplace = True)
