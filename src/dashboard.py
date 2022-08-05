@@ -37,7 +37,7 @@ app.layout = html.Div([
         html.P("Prediction method"),
         dcc.Dropdown(["XGBoost", "RNN", "LSTM"], "LSTM", clearable = False, id = "prediction-method-dropdown"),
         html.P("Prediction type"),
-        dcc.Dropdown(["Close", "Price of change", "RSI", "Bollinger Bands"], "Close", clearable = False, id = "prediction-type-dropdown")
+        dcc.Dropdown(["Close", "Price of change", "RSI", "Bollinger Bands", "Moving Average"], "Close", clearable = False, id = "prediction-type-dropdown")
     ], id = "user-input"),
     dcc.Loading(
         id="loading-data",

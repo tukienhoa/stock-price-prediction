@@ -75,7 +75,13 @@ def LSTMPredict(df, type):
         for i in range(0, len(data)):
             new_data["Date"][i] = data['Date'][i]
             new_data[type][i] = df[type][i]
-        
+    elif (type == "Moving Average"):
+        SMA_10 = df['Close'].rolling(window = 10).mean().fillna(0)
+
+        for i in range(0, len(data)):
+            new_data["Date"][i] = data['Date'][i]
+            new_data[type][i] = SMA_10[i]
+
     new_data.index = new_data.Date
     new_data.drop("Date", axis = 1, inplace = True)
     dataset = new_data.values
