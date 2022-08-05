@@ -40,6 +40,41 @@ def RNNPredict(df, type):
         for i in range(0, len(data)):
             new_data["Date"][i] = data['Date'][i]
             new_data[type][i] = rsi[i]
+    elif (type == "SMABB"):
+        periods = 20
+        # Calculate SMA
+        df['SMABB'] = df['Close'].rolling(window = periods).mean()
+        df['SMABB'] = df['SMABB'].fillna(0)
+
+        for i in range(0, len(data)):
+            new_data["Date"][i] = data['Date'][i]
+            new_data[type][i] = df[type][i]
+    elif (type == "UpperBB"):
+        periods = 20
+        # Calculate SMA
+        df['SMABB'] = df['Close'].rolling(window = periods).mean()
+        # Calculate standard deviation
+        df['STD'] = df['Close'].rolling(window = periods).std()
+        # Calculate upper Bollinger band
+        df['UpperBB'] = df['SMABB'] + (2 * df['STD'])
+        df['UpperBB'] = df['UpperBB'].fillna(0)
+
+        for i in range(0, len(data)):
+            new_data["Date"][i] = data['Date'][i]
+            new_data[type][i] = df[type][i]
+    elif (type == "LowerBB"):
+        periods = 20
+        # Calculate SMA
+        df['SMABB'] = df['Close'].rolling(window = periods).mean()
+        # Calculate standard deviation
+        df['STD'] = df['Close'].rolling(window = periods).std()
+        # Calculate lower Bollinger band
+        df['LowerBB'] = df['SMABB'] - (2 * df['STD'])
+        df['LowerBB'] = df['LowerBB'].fillna(0)
+
+        for i in range(0, len(data)):
+            new_data["Date"][i] = data['Date'][i]
+            new_data[type][i] = df[type][i]
             
         
     new_data.index = new_data.Date
