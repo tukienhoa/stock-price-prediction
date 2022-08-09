@@ -1,41 +1,40 @@
-import websocket, json
 import csv
+import config
+from binance.client import Client
+from datetime import timedelta
 
-cc = 'btcusdt'
-interval = '3m'
-socket = f'wss://stream.binance.com:9443/ws/{cc}@kline_{interval}'
+client = Client(config.API_KEY, config.API_SECRET, tld='us')
+processed_data = []
 
-ws = websocket.WebSocket()
-list_data = []
+def getData(processed_data):
+    received_data = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1MINUTE, limit = 1000)
+    for data in received_data:
+        candlestick = {
+            "date": data[0]/1000 + timedelta(hours=7).total_seconds(),
+            "high": data[2],
+            "low": data[3],
+            "close": data[4]
+        }
+        processed_data.append(candlestick)
 
-def get_data(ws, list_data):
-    timer = 0
-    ws.connect(socket)
+getData(processed_data)
 
-    while(timer < 5):
-        data = ws.recv()
-        data = data.split('k', 1)
-        data = data[1]
-        data = '{' + data[43:len(data) - 2] + '}'
-        data = json.loads(data)
-        list_data.append([data["h"], data["l"], data["c"]])
-        timer += 1
-
-    if (timer == 5):
-        ws.close()
-
-get_data(ws, list_data)
-
-def write_data(list_data):
-    csvFile = open('./data/processed_3minutes.csv', 'w', newline='', encoding='UTF8')
+def writeData(list_data):
+    csvFile = open('./data/processed_1minute.csv', 'w', newline='', encoding='UTF8')
     candleStickWriter = csv.writer(csvFile,delimiter=',')
-    candleStickWriter.writerow(['High','Low','Close'])
+    candleStickWriter.writerow(['Date','High','Low','Close'])
 
     for i in range(len(list_data)):
-        candleStickWriter.writerow(list_data[i])
+        candleStickWriter.writerow([list_data[i]["date"], list_data[i]["high"], list_data[i]["low"], list_data[i]["close"]])
 
     csvFile.close()
 
-write_data(list_data)
+def addData(data):
+    csvFile = open('./data/processed_1minute.csv', 'a', newline='', encoding='UTF8')
+    candleStickWriter = csv.writer(csvFile)
+    candleStickWriter.writerow([data["date"], data["high"], data["low"], data["close"]])
 
+    csvFile.close()
+
+# writeData(processed_data)
 
