@@ -13,15 +13,23 @@ from prediction_methods.lstm_stock_pred import LSTMPredict
 from prediction_methods.xgboost_pred import XGBPredict
 from prediction_methods.rnn_stock_pred import RNNPredict
 
+from get_data.get_data import *
+
 # Run dash
 app = dash.Dash()
 server = app.server
 
 
-# Load data
-df = pd.read_csv("data/NSE-TATA.csv")
+# Fetch data from Binance API (1000 candles in history)
+data = getData()
+# Write data to csv
+writeData(data)
 
-df["Date"] = pd.to_datetime(df.Date,format = "%Y-%m-%d")
+
+# Load data
+df = pd.read_csv("data/processed_1minute.csv")
+
+df["Date"] = pd.to_datetime(df.Date, format = "%d-%m-%Y %X")
 df.index = df['Date']
 
 train = []

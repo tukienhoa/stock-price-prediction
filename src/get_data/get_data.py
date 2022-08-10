@@ -1,23 +1,25 @@
 import csv
-import config
+import config.config as cfg
 from binance.client import Client
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-client = Client(config.API_KEY, config.API_SECRET, tld='us')
-processed_data = []
 
-def getData(processed_data):
+client = Client(cfg.API_KEY, cfg.API_SECRET, tld='us')
+
+def getData():
+    processed_data = []
     received_data = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1MINUTE, limit = 1000)
     for data in received_data:
+        dateTime = datetime.fromtimestamp(data[0] / 1000 + timedelta(hours = 7).total_seconds())
         candlestick = {
-            "date": data[0]/1000 + timedelta(hours=7).total_seconds(),
+            "date": dateTime.strftime("%d-%m-%Y %H:%M:%S"),
             "high": data[2],
             "low": data[3],
             "close": data[4]
         }
         processed_data.append(candlestick)
 
-getData(processed_data)
+    return processed_data
 
 def writeData(list_data):
     csvFile = open('./data/processed_1minute.csv', 'w', newline='', encoding='UTF8')
