@@ -35,7 +35,7 @@ def addData():
     candle = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE, limit = 1)
     csvFile = open('./data/processed_1minute.csv', 'a', newline='', encoding='UTF8')
     candleStickWriter = csv.writer(csvFile)
-    candleStickWriter.writerow([candle[0][0], candle[0][2], candle[0][3], candle[0][4]])
+    candleStickWriter.writerow([datetime.fromtimestamp(candle[0][0] /  1000).strftime("%d-%m-%Y %H:%M:%S"), candle[0][2], candle[0][3], candle[0][4]])
 
     csvFile.close()
 

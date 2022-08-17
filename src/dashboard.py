@@ -1,6 +1,6 @@
+from pkgutil import get_data
 import dash
-from dash import dcc
-from dash import html
+from dash import dcc, html, ctx
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 
@@ -35,7 +35,6 @@ df.index = df['Date']
 train = []
 valid = []
 
-
 # App layout
 app.layout = html.Div([
    
@@ -47,6 +46,12 @@ app.layout = html.Div([
         html.P("Prediction type"),
         dcc.Dropdown(["Close", "Price of change", "RSI", "Bollinger Bands", "Moving Average"], "Close", clearable = False, id = "prediction-type-dropdown")
     ], id = "user-input"),
+    html.Div(id='hidden-div', style={'display':'none'}),
+    dcc.Interval(
+        id='interval-component',
+        interval=80 * 1000, # in milliseconds
+        n_intervals=0
+    ),
     dcc.Loading(
         id="loading-data",
         type="default",
@@ -57,30 +62,42 @@ app.layout = html.Div([
 # Prediction dropdown callback
 @app.callback(Output('dd-selected-pmethod', 'children'),
               [Input('prediction-method-dropdown', 'value'),
-               Input('prediction-type-dropdown', 'value')
+               Input('prediction-type-dropdown', 'value'),
+               Input('interval-component', 'n_intervals')
               ])
-def update_selected_pmethod(selected_method, selected_type):
+def update_selected_pmethod(selected_method, selected_type, n):
+    current_df = df
+    if ctx.triggered:
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        if trigger_id == "interval-component":
+            addData()
+
+            current_df = pd.read_csv("data/processed_1minute.csv")
+            current_df["Date"] = pd.to_datetime(current_df.Date, format = "%d-%m-%Y %X")
+            current_df.index = current_df['Date']
+
     if (selected_method == "XGBoost"):
         if (selected_type == "Bollinger Bands"):
-            [trainSMA, validSMA] = XGBPredict(df, "SMABB")
-            [trainUpper, validUpper] = XGBPredict(df, "UpperBB")
-            [trainLower, validLower] = XGBPredict(df, "LowerBB")
+            [trainSMA, validSMA] = XGBPredict(current_df, "SMABB")
+            [trainUpper, validUpper] = XGBPredict(current_df, "UpperBB")
+            [trainLower, validLower] = XGBPredict(current_df, "LowerBB")
         else:
-            [train, valid] = XGBPredict(df, selected_type)
+            [train, valid] = XGBPredict(current_df, selected_type)
     elif (selected_method == "RNN"):
         if (selected_type == "Bollinger Bands"):
-            [trainSMA, validSMA] = RNNPredict(df, "SMABB")
-            [trainUpper, validUpper] = RNNPredict(df, "UpperBB")
-            [trainLower, validLower] = RNNPredict(df, "LowerBB")
+            [trainSMA, validSMA] = RNNPredict(current_df, "SMABB")
+            [trainUpper, validUpper] = RNNPredict(current_df, "UpperBB")
+            [trainLower, validLower] = RNNPredict(current_df, "LowerBB")
         else:
-            [train, valid] = RNNPredict(df, selected_type)
+            [train, valid] = RNNPredict(current_df, selected_type)
     else:
         if (selected_type == "Bollinger Bands"):
-            [trainSMA, validSMA] = LSTMPredict(df, "SMABB")
-            [trainUpper, validUpper] = LSTMPredict(df, "UpperBB")
-            [trainLower, validLower] = LSTMPredict(df, "LowerBB")
+            [trainSMA, validSMA] = LSTMPredict(current_df, "SMABB")
+            [trainUpper, validUpper] = LSTMPredict(current_df, "UpperBB")
+            [trainLower, validLower] = LSTMPredict(current_df, "LowerBB")
         else:
-            [train, valid] = LSTMPredict(df, selected_type)
+            [train, valid] = LSTMPredict(current_df, selected_type)
     
     if (selected_type == "Bollinger Bands"):
         return html.Div([
@@ -190,7 +207,7 @@ def update_selected_pmethod(selected_method, selected_type):
                 )                
             ])                
         ])
-   
+
 
 # Main
 if __name__=='__main__':
